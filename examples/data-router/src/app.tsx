@@ -1,5 +1,8 @@
-import * as React from "react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  type RouteObject,
+  RouterProvider,
+} from "react-router-dom";
 
 import "./index.css";
 
@@ -18,7 +21,7 @@ function convert(m: any) {
   };
 }
 
-let router = createBrowserRouter([
+const routes: RouteObject[] = [
   {
     path: "/",
     lazy: () => import("./routes/layout").then(convert),
@@ -43,7 +46,9 @@ let router = createBrowserRouter([
       },
     ],
   },
-]);
+];
+
+let router = createBrowserRouter(routes);
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => router.dispose());
