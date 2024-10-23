@@ -1,7 +1,6 @@
+import type * as Route from "./+types.todo";
 import React from "react";
 import {
-  type ActionFunctionArgs,
-  useLoaderData,
   useNavigation,
   Link,
   Form,
@@ -12,7 +11,7 @@ import {
 import sleep from "../sleep";
 import { type Todos, addTodo, deleteTodo, getTodos } from "../todos";
 
-export async function clientAction({ request }: ActionFunctionArgs) {
+export async function clientAction({ request }: Route.ClientActionArgs) {
   await sleep();
 
   let formData = await request.formData();
@@ -38,13 +37,12 @@ export async function clientAction({ request }: ActionFunctionArgs) {
   });
 }
 
-export async function clientLoader(): Promise<Todos> {
+export async function clientLoader() {
   await sleep();
   return getTodos();
 }
 
-export default function TodosList() {
-  let todos = useLoaderData() as Todos;
+export default function TodosList({ loaderData: todos }: Route.ComponentProps) {
   let navigation = useNavigation();
   let formRef = React.useRef<HTMLFormElement>(null);
 
