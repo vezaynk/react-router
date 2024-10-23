@@ -24,6 +24,13 @@ function convert(m: any) {
 const routes: RouteObject[] = [
   {
     path: "/",
+    // We include this in the critical bundle so it can render immediately
+    // without needing to wait for the lazy() method to download the rest of
+    // our layout implementation.  Once we move to the vite plugin and SPA mode,
+    // this will be rendered in the initial HTML so it'll show up even faster 🚀
+    HydrateFallback() {
+      return <p>Performing initial data load</p>;
+    },
     lazy: () => import("./routes/layout").then(convert),
     children: [
       {
@@ -48,20 +55,16 @@ const routes: RouteObject[] = [
   },
 ];
 
-let router = createBrowserRouter(routes);
+let router = createBrowserRouter(routes, {
+  future: {
+    v7_partialHydration: true,
+  },
+});
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => router.dispose());
 }
 
 export default function App() {
-  return <RouterProvider router={router} fallbackElement={<Fallback />} />;
-}
-
-export function sleep(n: number = 500) {
-  return new Promise((r) => setTimeout(r, n));
-}
-
-export function Fallback() {
-  return <p>Performing initial data load</p>;
+  return <RouterProvider router={router} />;
 }
