@@ -2,7 +2,7 @@ import {
   type LoaderFunctionArgs,
   useParams,
   useLoaderData,
-} from "react-router-dom";
+} from "react-router";
 import sleep from "../sleep";
 import { getTodos } from "../todos";
 

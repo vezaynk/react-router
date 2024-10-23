@@ -2,7 +2,7 @@ import {
   createBrowserRouter,
   type RouteObject,
   RouterProvider,
-} from "react-router-dom";
+} from "react-router";
 
 import "./index.css";
 
