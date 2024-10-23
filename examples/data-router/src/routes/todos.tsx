@@ -9,11 +9,8 @@ import {
   useRouteError,
   useFetcher,
 } from "react-router-dom";
+import sleep from "../sleep";
 import { type Todos, addTodo, deleteTodo, getTodos } from "../todos";
-
-function sleep(n: number = 500) {
-  return new Promise((r) => setTimeout(r, n));
-}
 
 export async function clientAction({ request }: ActionFunctionArgs) {
   await sleep();

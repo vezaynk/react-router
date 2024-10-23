@@ -1,8 +1,5 @@
 import { useLoaderData } from "react-router-dom";
-
-function sleep(n: number = 500) {
-  return new Promise((r) => setTimeout(r, n));
-}
+import sleep from "../sleep";
 
 interface HomeLoaderData {
   date: string;

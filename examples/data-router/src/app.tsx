@@ -45,8 +45,7 @@ let router = createBrowserRouter([
         children: [
           {
             path: ":id",
-            loader: todoLoader,
-            Component: Todo,
+            lazy: () => import("./routes/todo").then(convert),
           },
         ],
       },
@@ -73,34 +72,6 @@ export function sleep(n: number = 500) {
 
 export function Fallback() {
   return <p>Performing initial data load</p>;
-}
-
-// Todo
-export async function todoLoader({
-  params,
-}: LoaderFunctionArgs): Promise<string> {
-  await sleep();
-  let todos = getTodos();
-  if (!params.id) {
-    throw new Error("Expected params.id");
-  }
-  let todo = todos[params.id];
-  if (!todo) {
-    throw new Error(`Uh oh, I couldn't find a todo with id "${params.id}"`);
-  }
-  return todo;
-}
-
-export function Todo() {
-  let params = useParams();
-  let todo = useLoaderData() as string;
-  return (
-    <>
-      <h2>Nested Todo Route:</h2>
-      <p>id: {params.id}</p>
-      <p>todo: {todo}</p>
-    </>
-  );
 }
 
 // Deferred Data
