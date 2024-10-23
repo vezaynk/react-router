@@ -1,24 +1,17 @@
 import * as React from "react";
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
+import type { LoaderFunctionArgs } from "react-router-dom";
 import {
   Await,
   createBrowserRouter,
   defer,
-  Form,
-  Link,
-  Outlet,
   RouterProvider,
   useAsyncError,
   useAsyncValue,
-  useFetcher,
   useLoaderData,
-  useNavigation,
   useParams,
-  useRouteError,
 } from "react-router-dom";
 
-import type { Todos } from "./todos";
-import { addTodo, deleteTodo, getTodos } from "./todos";
+import { getTodos } from "./todos";
 
 import "./index.css";
 
@@ -48,10 +41,7 @@ let router = createBrowserRouter([
       },
       {
         path: "todos",
-        action: todosAction,
-        loader: todosLoader,
-        Component: TodosList,
-        ErrorBoundary: TodosBoundary,
+        lazy: () => import("./routes/todos").then(convert),
         children: [
           {
             path: ":id",
@@ -83,120 +73,6 @@ export function sleep(n: number = 500) {
 
 export function Fallback() {
   return <p>Performing initial data load</p>;
-}
-
-// Todos
-export async function todosAction({ request }: ActionFunctionArgs) {
-  await sleep();
-
-  let formData = await request.formData();
-
-  // Deletion via fetcher
-  if (formData.get("action") === "delete") {
-    let id = formData.get("todoId");
-    if (typeof id === "string") {
-      deleteTodo(id);
-      return { ok: true };
-    }
-  }
-
-  // Addition via <Form>
-  let todo = formData.get("todo");
-  if (typeof todo === "string") {
-    addTodo(todo);
-  }
-
-  return new Response(null, {
-    status: 302,
-    headers: { Location: "/todos" },
-  });
-}
-
-export async function todosLoader(): Promise<Todos> {
-  await sleep();
-  return getTodos();
-}
-
-export function TodosList() {
-  let todos = useLoaderData() as Todos;
-  let navigation = useNavigation();
-  let formRef = React.useRef<HTMLFormElement>(null);
-
-  // If we add and then we delete - this will keep isAdding=true until the
-  // fetcher completes it's revalidation
-  let [isAdding, setIsAdding] = React.useState(false);
-  React.useEffect(() => {
-    if (navigation.formData?.get("action") === "add") {
-      setIsAdding(true);
-    } else if (navigation.state === "idle") {
-      setIsAdding(false);
-      formRef.current?.reset();
-    }
-  }, [navigation]);
-
-  return (
-    <>
-      <h2>Todos</h2>
-      <p>
-        This todo app uses a &lt;Form&gt; to submit new todos and a
-        &lt;fetcher.form&gt; to delete todos. Click on a todo item to navigate
-        to the /todos/:id route.
-      </p>
-      <ul>
-        <li>
-          <Link to="/todos/junk">
-            Click this link to force an error in the loader
-          </Link>
-        </li>
-        {Object.entries(todos).map(([id, todo]) => (
-          <li key={id}>
-            <TodoItem id={id} todo={todo} />
-          </li>
-        ))}
-      </ul>
-      <Form method="post" ref={formRef}>
-        <input type="hidden" name="action" value="add" />
-        <input name="todo"></input>
-        <button type="submit" disabled={isAdding}>
-          {isAdding ? "Adding..." : "Add"}
-        </button>
-      </Form>
-      <Outlet />
-    </>
-  );
-}
-
-export function TodosBoundary() {
-  let error = useRouteError() as Error;
-  return (
-    <>
-      <h2>Error 💥</h2>
-      <p>{error.message}</p>
-    </>
-  );
-}
-
-interface TodoItemProps {
-  id: string;
-  todo: string;
-}
-
-export function TodoItem({ id, todo }: TodoItemProps) {
-  let fetcher = useFetcher();
-
-  let isDeleting = fetcher.formData != null;
-  return (
-    <>
-      <Link to={`/todos/${id}`}>{todo}</Link>
-      &nbsp;
-      <fetcher.Form method="post" style={{ display: "inline" }}>
-        <input type="hidden" name="action" value="delete" />
-        <button type="submit" name="todoId" value={id} disabled={isDeleting}>
-          {isDeleting ? "Deleting..." : "Delete"}
-        </button>
-      </fetcher.Form>
-    </>
-  );
 }
 
 // Todo
