@@ -44,8 +44,7 @@ let router = createBrowserRouter([
     children: [
       {
         index: true,
-        loader: homeLoader,
-        Component: Home,
+        lazy: () => import("./routes/home").then(convert),
       },
       {
         path: "todos",
@@ -84,28 +83,6 @@ export function sleep(n: number = 500) {
 
 export function Fallback() {
   return <p>Performing initial data load</p>;
-}
-
-// Home
-interface HomeLoaderData {
-  date: string;
-}
-
-export async function homeLoader(): Promise<HomeLoaderData> {
-  await sleep();
-  return {
-    date: new Date().toISOString(),
-  };
-}
-
-export function Home() {
-  let data = useLoaderData() as HomeLoaderData;
-  return (
-    <>
-      <h2>Home</h2>
-      <p>Date from loader: {data.date}</p>
-    </>
-  );
 }
 
 // Todos
