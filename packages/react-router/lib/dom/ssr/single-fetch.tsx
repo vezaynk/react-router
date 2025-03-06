@@ -136,6 +136,10 @@ export function StreamTransfer({
   }
 }
 
+function middlewareErrorHandler(e: MiddlewareError) {
+  return { [e.routeId]: { type: "error", result: e.error } };
+}
+
 export function getSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
@@ -152,11 +156,10 @@ export function getSingleFetchDataStrategy(
         args,
         false,
         () => singleFetchActionStrategy(request, matches, basename),
-        (e) => ({ [e.routeId]: { type: "error", result: e.error } })
+        middlewareErrorHandler
       ) as Promise<Record<string, DataStrategyResult>>;
     }
 
-    // TODO: Enable middleware for this flow
     if (!ssr) {
       // If this is SPA mode, there won't be any loaders below root and we'll
       // disable single fetch.  We have to keep the `dataStrategy` defined for
@@ -201,7 +204,7 @@ export function getSingleFetchDataStrategy(
           args,
           false,
           () => nonSsrStrategy(manifest, request, matches, basename),
-          (e) => ({ [e.routeId]: { type: "error", result: e.error } })
+          middlewareErrorHandler
         ) as Promise<Record<string, DataStrategyResult>>;
       }
     }
@@ -212,7 +215,7 @@ export function getSingleFetchDataStrategy(
         args,
         false,
         () => singleFetchLoaderFetcherStrategy(request, matches, basename),
-        (e) => ({ [e.routeId]: { type: "error", result: e.error } })
+        middlewareErrorHandler
       ) as Promise<Record<string, DataStrategyResult>>;
     }
 
@@ -230,7 +233,7 @@ export function getSingleFetchDataStrategy(
           matches,
           basename
         ),
-      (e) => ({ [e.routeId]: { type: "error", result: e.error } })
+      middlewareErrorHandler
     ) as Promise<Record<string, DataStrategyResult>>;
   };
 }
