@@ -1,3 +1,4 @@
+import { create } from "react-test-renderer";
 import type {
   DataStrategyFunction,
   DataStrategyMatch,
@@ -28,7 +29,7 @@ describe("router dataStrategy", () => {
     );
   }
 
-  it.only("POC: lets dataStrategy handle shouldRevalidate", async () => {
+  it("POC: lets dataStrategy handle shouldRevalidate", async () => {
     let t = setup({
       routes: [
         {
@@ -81,7 +82,7 @@ describe("router dataStrategy", () => {
     });
   });
 
-  it.only("POC: single fetch - lets dataStrategy handle shouldRevalidate", async () => {
+  it("POC: single fetch - lets dataStrategy handle shouldRevalidate", async () => {
     let t = setup({
       routes: [
         {
@@ -134,7 +135,6 @@ describe("router dataStrategy", () => {
       errors: null,
     });
 
-    debugger;
     let B = await t.navigate("/parent/child");
     await B.loaders.parent.resolve("PARENT2");
     await B.loaders.child.resolve("CHILD");
@@ -174,6 +174,70 @@ describe("router dataStrategy", () => {
         parent: "PARENT3",
       },
       errors: null,
+    });
+  });
+
+  it("POC: lets dataStrategy handle shouldRevalidate for fetchers", async () => {
+    let t = setup({
+      routes: [
+        {
+          id: "index",
+          path: "/",
+          action: true,
+        },
+        {
+          id: "fetch",
+          path: "/fetch",
+          loader: true,
+        },
+      ],
+      async dataStrategy({ matches, fetcherKey, shouldRevalidateArgs }) {
+        let keyedResults: Record<string, DataStrategyResult> = {};
+        let matchesToLoad = matches.filter((m) => m.shouldCallHandler());
+        for (let m of matchesToLoad) {
+          let result = await m.resolve();
+          keyedResults[m.route.id] = result;
+        }
+        return keyedResults;
+      },
+    });
+
+    let A = await t.fetch("/fetch", "a", "index");
+    await A.loaders.fetch.resolve("1");
+    expect(t.fetchers.a).toMatchObject({
+      state: "idle",
+      data: "1",
+    });
+
+    let B = await t.navigate(
+      "/",
+      {
+        formMethod: "post",
+        formData: createFormData({ revalidate: "yes" }),
+      },
+      ["fetch"]
+    );
+    await B.actions.index.resolve("ACTION");
+    await B.loaders.fetch.resolve("2");
+    expect(t.router.state).toMatchObject({
+      actionData: {
+        index: "ACTION",
+      },
+      errors: null,
+    });
+    expect(t.fetchers.a).toMatchObject({
+      state: "idle",
+      data: "2",
+    });
+
+    let C = await t.revalidate("navigation", "fetch");
+    await C.loaders.fetch.resolve("3");
+    expect(t.router.state).toMatchObject({
+      errors: null,
+    });
+    expect(t.fetchers.a).toMatchObject({
+      state: "idle",
+      data: "3",
     });
   });
 
@@ -585,10 +649,10 @@ describe("router dataStrategy", () => {
       let dataStrategy = jest.fn<
         ReturnType<DataStrategyFunction>,
         Parameters<DataStrategyFunction>
-      >(({ matches }) => {
-        return Promise.all(matches.map((m) => m.resolve())).then((results) =>
-          keyedResults(matches, results)
-        );
+      >(async ({ matches }) => {
+        let matchesToLoad = matches.filter((m) => m.shouldLoad);
+        let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
+        return keyedResults(matchesToLoad, results);
       });
       let t = setup({
         routes: [
