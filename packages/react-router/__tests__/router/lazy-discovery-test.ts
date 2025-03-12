@@ -1148,7 +1148,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     let childLoaderDfd = createDeferred();
 
     router = createRouter({
-      history: createMemoryHistory(),
+      history: createMemoryHistory({ initialEntries: ["/nope"] }),
       routes: [
         {
           path: "/nope",
@@ -1159,7 +1159,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         let children = await childrenDfd.promise;
         patch(null, children);
       },
-    });
+    }).initialize();
 
     router.navigate("/parent/child");
     expect(router.state.navigation).toMatchObject({
