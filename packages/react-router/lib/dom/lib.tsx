@@ -2313,7 +2313,7 @@ export function useSearchParams(
           : nextInit,
       );
       hasSetSearchParamsRef.current = true;
-      navigate("?" + newSearchParams, navigateOptions);
+      return navigate("?" + newSearchParams, navigateOptions);
     },
     [navigate, searchParams],
   );
